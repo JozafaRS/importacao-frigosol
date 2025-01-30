@@ -7,59 +7,75 @@ import sqlalchemy
 load_dotenv(find_dotenv())
 
 def validar_planilha(data_frame: pd.DataFrame) -> None:
-    colunas_esperadas = ['Vendedor', 'Nome', 'Data Compra', 'Mês', 'Data Devolução', 'Unidade',
-       'Série', 'Número', 'Pedido', 'Romaneio', 'Frete', 'Código Cliente',
-       'Rede', 'Razão Social', 'Tipo de Cliente', 'Rota Cliente',
-       'Rota Pedido', 'Cidade', 'UF', 'Ramo Ativ.', 'Código Produto',
-       'Descrição Produto', 'Unidade Produto', 'Família', 'CFOP', 'Descrição',
-       'Volumes', 'Peso', 'Lista', 'Ocorr', 'Pre.Base', 'Preço Praticado',
-       'Valor Produto', 'Desconto Comercial', 'Valor Total Faturado', 'Desc.',
-       'Nota Refaturada', 'Romaneio Refaturada', 'Nota Devolução',
-       'Cliente Original', 'Cond. Pag. Cliente', 'Cond. Pag. Nota']
+    colunas_esperadas = ['NFS_DATA_EMISSAO', 'NFS_NRO_NF', 'NFS_CLIENTE', 'NFS_RAZAO',
+       'NFS_VENDEDOR', 'VEND_NOME', 'NFP_PRODUTO', 'NFP_PRODUTO_DESCRICAO',
+       'NFP_UNIDADE_PRODUTO', 'NFP_PRECO_UNITARIO', 'NFP_RATEIO_DESC_TOTAL',
+       'PRODUTO_GRUPO', 'GRUPO_DESCRICAO', 'PRODUTO_SUBGRUPO',
+       'PRODUTO_CLASS_FISCAL', 'NAT_COD', 'NAT_DESC', 'SUBGRUPO_DESCRICAO',
+       'NFP_PECAS', 'NFP_QTDE_PRODUTO', 'NFP_TOTAL_PRODUTO', 'DEDUCAO',
+       'MEDIA', 'VALOR_COMISSAO', 'NFS_DH_RECBTO_NFE', 'CIDADE', 'PEÇAS']
+    # O modelo que temos possui a coluna PEÇAS que foi adicionada posteriormente
     
     if data_frame.empty:
         raise ValueError('Planilha Vazia')
 
-    if list(data_frame.columns) != colunas_esperadas:
-        raise TypeError('Colunas Incompatíveis')
+    # if list(data_frame.columns) != colunas_esperadas:
+    #     raise TypeError('Colunas Incompatíveis')
     
-    if not pd.api.types.is_datetime64_any_dtype(data_frame['Data Compra']):
+    if not pd.api.types.is_datetime64_any_dtype(data_frame['NFS_DATA_EMISSAO']):
         raise TypeError('A coluna Data Compra não é do tipo datetime.')
 
-    if not pd.api.types.is_datetime64_any_dtype(data_frame['Data Devolução']):
+    if not pd.api.types.is_datetime64_any_dtype(data_frame['NFS_DH_RECBTO_NFE']):
         raise TypeError('A coluna Data Devolução não é do tipo datetime.')
     
-def filtrar_novos_dados(data_frame: pd.DataFrame) -> pd.DataFrame:
+def formatar_df_confrigo(df_original: pd.DataFrame) -> pd.DataFrame:
+    data_frame = df_original.copy()
+    data_frame['PECAS'] = data_frame.apply(calcular_pecas, axis=1)
+    data_frame['VEND_NOME'] = data_frame['VEND_NOME'].apply(lambda x: str(x).replace("_x000D_", "").strip())
+    data_frame.loc[data_frame['VEND_NOME'] == 'VALTER ROBERTO ROCHA DE SOUZA', 'VEND_NOME'] = "GÉSSICA VASCONCELOS"
+    
+    return data_frame
+
+def calcular_pecas(linha):
+    if linha['NFP_PRODUTO'] in [6858, 20834, 16391, 6859, 20834]:
+        return linha['NFP_PECAS'] / 2
+    elif linha['NFP_PRODUTO'] in [8754, 7405, 6876, 6879, 16417, 6877]:
+        return linha['NFP_PECAS']
+    else:
+        return 0
+
+def formatar_df_frigosol(df_original: pd.DataFrame) -> pd.DataFrame:
+    data_frame = df_original.copy()
+    data_frame['VEND_NOME'] = data_frame['VEND_NOME'].apply(lambda x: str(x).replace("_x000D_", "").strip())
+    
+    return data_frame
+
+def filtrar_novos_dados_confrigo(data_frame: pd.DataFrame) -> pd.DataFrame:
     url_db = environ.get('URL_DB')
     conn = sqlalchemy.create_engine(url_db)
-    query = 'SELECT numero FROM relatorios_avinor;'
+    query = 'SELECT NFS_NRO_NF FROM vendas_confrigo;'
     pedidos_registrados = pd.read_sql_query(query, conn)
 
-    df_filtrado = data_frame[~data_frame['Número'].isin(pedidos_registrados.numero)]
+    df_filtrado = data_frame[~data_frame['NFS_NRO_NF'].isin(pedidos_registrados['NFS_NRO_NF'])]
     
     return df_filtrado
 
-def formatar_df(df_original: pd.DataFrame) -> pd.DataFrame:
-    data_frame = df_original.copy()
+def filtrar_novos_dados_frigosol(data_frame: pd.DataFrame) -> pd.DataFrame:
+    url_db = environ.get('URL_DB')
+    conn = sqlalchemy.create_engine(url_db)
+    query = 'SELECT NFS_NRO_NF FROM vendas_frigosol;'
+    pedidos_registrados = pd.read_sql_query(query, conn)
 
-    data_frame.columns = ['vendedor', 'nome', 'data_compra', 'mes', 'data_devolucao', 'unidade',
-       'serie', 'numero', 'pedido', 'romaneio', 'frete', 'codigo_cliente',
-       'rede', 'razao_social', 'tipo_de_cliente', 'rota_cliente',
-       'rota_pedido', 'cidade', 'uf', 'ramo_ativ', 'codigo_produto',
-       'descricao_produto', 'unidade_produto', 'familia', 'cfop', 'descricao',
-       'volumes', 'peso', 'lista', 'ocorr', 'prebase', 'preco_praticado',
-       'valor_produto', 'desconto_comercial', 'valor_total_faturado', 'desc',
-       'nota_refaturada', 'romaneio_refaturada', 'nota_devolucao',
-       'cliente_original', 'cond_pag_cliente', 'cond_pag_nota']
+    df_filtrado = data_frame[~data_frame['NFS_NRO_NF'].isin(pedidos_registrados['NFS_NRO_NF'])]
     
-    vendedores_ativos = [2, 13, 36, 784, 1003, 1008, 1014, 1038, 1040, 1054, 1063]
-    data_frame['status_vendedor'] = 'inativo'
+    return df_filtrado
 
-    data_frame.loc[data_frame['vendedor'].isin(vendedores_ativos), 'status_vendedor'] = 'ativo'
-
-    return data_frame
-
-def adicionar_registros(novos_dados: pd.DataFrame) -> None:
+def adicionar_registros_confrigo(novos_dados: pd.DataFrame) -> None:
     url_db = environ.get('URL_DB')
     conn = sqlalchemy.create_engine(url_db)  
-    novos_dados.to_sql('relatorios_avinor', conn, if_exists='append', index=False)
+    novos_dados.to_sql('vendas_confrigo', conn, if_exists='append', index=False)
+
+def adicionar_registros_frigosol(novos_dados: pd.DataFrame) -> None:
+    url_db = environ.get('URL_DB')
+    conn = sqlalchemy.create_engine(url_db)  
+    novos_dados.to_sql('vendas_frigosol', conn, if_exists='append', index=False)
