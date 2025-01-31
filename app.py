@@ -116,10 +116,10 @@ def page_upload():
     col1, col2 = st.columns(2, gap='large')
 
     with col1:
-        st.header("Enviar dados para Banco")
+        st.header("Enviar para o banco de dados")
         st.divider()
-        arquivo_confrigo = st.file_uploader('Planilha Confrigo', ['xlsx', 'xls'])
-        arquivo_frigosol = st.file_uploader('Planilha Frigosol', ['xlsx', 'xls'])
+        arquivo_confrigo = st.file_uploader('**Planilha Confrigo**', ['xlsx', 'xls'])
+        arquivo_frigosol = st.file_uploader('**Planilha Frigosol**', ['xlsx', 'xls'])
         botao = st.button('Enviar')
 
     with col2:
