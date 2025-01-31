@@ -19,8 +19,8 @@ def validar_planilha(data_frame: pd.DataFrame) -> None:
     if data_frame.empty:
         raise ValueError('Planilha Vazia')
 
-    # if list(data_frame.columns) != colunas_esperadas:
-    #     raise TypeError('Colunas Incompatíveis')
+    if list(data_frame.columns) != colunas_esperadas:
+        raise TypeError('Colunas Incompatíveis')
     
     if not pd.api.types.is_datetime64_any_dtype(data_frame['NFS_DATA_EMISSAO']):
         raise TypeError('A coluna Data Compra não é do tipo datetime.')
