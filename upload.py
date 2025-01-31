@@ -13,7 +13,7 @@ def validar_planilha(data_frame: pd.DataFrame) -> None:
        'PRODUTO_GRUPO', 'GRUPO_DESCRICAO', 'PRODUTO_SUBGRUPO',
        'PRODUTO_CLASS_FISCAL', 'NAT_COD', 'NAT_DESC', 'SUBGRUPO_DESCRICAO',
        'NFP_PECAS', 'NFP_QTDE_PRODUTO', 'NFP_TOTAL_PRODUTO', 'DEDUCAO',
-       'MEDIA', 'VALOR_COMISSAO', 'NFS_DH_RECBTO_NFE', 'CIDADE', 'PEÇAS']
+       'MEDIA', 'VALOR_COMISSAO', 'NFS_DH_RECBTO_NFE', 'CIDADE']
     # O modelo que temos possui a coluna PEÇAS que foi adicionada posteriormente
     
     if data_frame.empty:
