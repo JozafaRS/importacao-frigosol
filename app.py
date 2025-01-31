@@ -48,7 +48,7 @@ def processar_confrigo(arquivo):
     progresso.progress(4/5, 'Enviando Dados...')
 
     try:
-        #up.adicionar_registros_confrigo(df_formatado)
+        up.adicionar_registros_confrigo(df_formatado)
         progresso.progress(5/5, 'Finalizado!')
         progresso.empty()
         st.success(f'Base de dados atualizada com sucesso! {len(df_formatado)} registros adicionados')
@@ -102,7 +102,7 @@ def processar_frigosol(arquivo):
     progresso.progress(4/5, 'Enviando Dados...')
 
     try:
-        #up.adicionar_registros_frigosol(df_formatado)
+        up.adicionar_registros_frigosol(df_formatado)
         progresso.progress(5/5, 'Finalizado!')
         progresso.empty()
         st.success(f'Base de dados atualizada com sucesso! {len(df_formatado)} registros adicionados')
