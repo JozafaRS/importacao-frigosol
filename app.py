@@ -118,6 +118,7 @@ def page_upload():
     with col1:
         st.header("Enviar para o banco de dados")
         st.divider()
+        arquivo_agropecuaria = st.file_uploader("**Planilha Agropecuaria**", ['xlsx', 'xls'])
         arquivo_confrigo = st.file_uploader('**Planilha Confrigo**', ['xlsx', 'xls'])
         arquivo_frigosol = st.file_uploader('**Planilha Frigosol**', ['xlsx', 'xls'])
         botao = st.button('Enviar')
@@ -126,7 +127,10 @@ def page_upload():
         st.header('Logs')
         st.divider()
 
-        if (arquivo_frigosol or arquivo_confrigo) and botao:
+        if (arquivo_frigosol or arquivo_confrigo or arquivo_agropecuaria) and botao:
+            if arquivo_agropecuaria:
+                processar_confrigo(arquivo_agropecuaria)
+            
             if arquivo_confrigo:
                 processar_confrigo(arquivo_confrigo)
             
