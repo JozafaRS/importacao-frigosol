@@ -118,7 +118,7 @@ def page_upload():
     with col1:
         st.header("Enviar para o banco de dados")
         st.divider()
-        arquivo_agropecuaria = st.file_uploader("**Planilha Agropecuaria**", ['xlsx', 'xls'])
+        arquivo_agropecuaria = st.file_uploader("**Planilha Agropecuária**", ['xlsx', 'xls'])
         arquivo_confrigo = st.file_uploader('**Planilha Confrigo**', ['xlsx', 'xls'])
         arquivo_frigosol = st.file_uploader('**Planilha Frigosol**', ['xlsx', 'xls'])
         botao = st.button('Enviar')
