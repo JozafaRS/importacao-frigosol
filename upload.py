@@ -6,6 +6,8 @@ import sqlalchemy
 
 load_dotenv(find_dotenv())
 
+URL_DB = environ.get('URL_DB')
+
 def validar_planilha(data_frame: pd.DataFrame) -> None:
     colunas_esperadas = ['NFS_DATA_EMISSAO', 'NFS_NRO_NF', 'NFS_CLIENTE', 'NFS_RAZAO',
        'NFS_VENDEDOR', 'VEND_NOME', 'NFP_PRODUTO', 'NFP_PRODUTO_DESCRICAO',
@@ -50,8 +52,7 @@ def formatar_df_frigosol(df_original: pd.DataFrame) -> pd.DataFrame:
     return data_frame
 
 def filtrar_novos_dados_confrigo(data_frame: pd.DataFrame) -> pd.DataFrame:
-    url_db = environ.get('URL_DB')
-    conn = sqlalchemy.create_engine(url_db)
+    conn = sqlalchemy.create_engine(URL_DB)
     query = 'SELECT NFS_NRO_NF FROM vendas_confrigo;'
     pedidos_registrados = pd.read_sql_query(query, conn)
 
@@ -60,12 +61,20 @@ def filtrar_novos_dados_confrigo(data_frame: pd.DataFrame) -> pd.DataFrame:
     return df_filtrado
 
 def filtrar_novos_dados_frigosol(data_frame: pd.DataFrame) -> pd.DataFrame:
-    url_db = environ.get('URL_DB')
-    conn = sqlalchemy.create_engine(url_db)
+    conn = sqlalchemy.create_engine(URL_DB)
     query = 'SELECT NFS_NRO_NF FROM vendas_frigosol;'
     pedidos_registrados = pd.read_sql_query(query, conn)
 
     df_filtrado = data_frame[~data_frame['NFS_NRO_NF'].isin(pedidos_registrados['NFS_NRO_NF'])]
+    
+    return df_filtrado
+
+def filtrar_novos_dados(data_frame: pd.DataFrame, tabela: str, campo: str = "NFS_NRO_NF"):
+    conn = sqlalchemy.create_engine(URL_DB)
+    query = f'SELECT {campo} FROM {tabela};'
+    pedidos_registrados = pd.read_sql_query(query, conn)
+
+    df_filtrado = data_frame[~data_frame[campo].isin(pedidos_registrados[campo])]
     
     return df_filtrado
 
@@ -78,3 +87,7 @@ def adicionar_registros_frigosol(novos_dados: pd.DataFrame) -> None:
     url_db = environ.get('URL_DB')
     conn = sqlalchemy.create_engine(url_db)  
     novos_dados.to_sql('vendas_frigosol', conn, if_exists='append', index=False)
+
+def adicionar_registros(data_frame: pd.DataFrame, nome_tabela: str):
+    conn = sqlalchemy.create_engine(URL_DB)  
+    data_frame.to_sql(nome_tabela, conn, if_exists='append', index=False)
