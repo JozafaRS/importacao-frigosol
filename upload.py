@@ -34,6 +34,7 @@ def formatar_df_confrigo(df_original: pd.DataFrame) -> pd.DataFrame:
     data_frame['PECAS'] = data_frame.apply(calcular_pecas, axis=1)
     data_frame['VEND_NOME'] = data_frame['VEND_NOME'].apply(lambda x: str(x).replace("_x000D_", "").strip())
     data_frame.loc[data_frame['VEND_NOME'] == 'VALTER ROBERTO ROCHA DE SOUZA', 'VEND_NOME'] = "GÉSSICA VASCONCELOS"
+    data_frame['DATA_AJUSTADA'] = data_frame['NFS_DATA_EMISSAO'].apply(retornar_data_ajustada, axis=1)
     
     return data_frame
 
@@ -45,10 +46,18 @@ def calcular_pecas(linha):
     else:
         return 0
 
+
+def retornar_data_ajustada(data: pd.Timestamp):
+    data_atual = pd.Timestamp.now()
+    if data.month == data_atual.month():
+        return data
+    else:
+        return data_atual
+
 def formatar_df_frigosol(df_original: pd.DataFrame) -> pd.DataFrame:
     data_frame = df_original.copy()
     data_frame['VEND_NOME'] = data_frame['VEND_NOME'].apply(lambda x: str(x).replace("_x000D_", "").strip())
-    
+    data_frame['DATA_AJUSTADA'] = data_frame['NFS_DATA_EMISSAO'].apply(retornar_data_ajustada, axis=1)
     return data_frame
 
 def filtrar_novos_dados_confrigo(data_frame: pd.DataFrame) -> pd.DataFrame:
