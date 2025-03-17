@@ -49,7 +49,7 @@ def calcular_pecas(linha):
 
 def retornar_data_ajustada(data: pd.Timestamp):
     data_atual = pd.Timestamp.now()
-    if data.month == data_atual.month():
+    if data.month == data_atual.month:
         return data
     else:
         return data_atual
