@@ -26,7 +26,7 @@ def processar_confrigo(arquivo):
     progresso.progress(2/5, 'Filtrando Registros...')
 
     try:
-        novos_dados = up.filtrar_novos_dados_confrigo(data_frame)
+        novos_dados = up.filtrar_novos_dados(data_frame, "vendas_confrigo")
     except Exception as e:
         progresso.empty()
         st.error(f'Erro ao se conectar ao banco de dados. Error: {e}')
@@ -80,7 +80,7 @@ def processar_frigosol(arquivo):
     progresso.progress(2/5, 'Filtrando Registros...')
 
     try:
-        novos_dados = up.filtrar_novos_dados_frigosol(data_frame)
+        novos_dados = up.filtrar_novos_dados(data_frame, "vendas_frigosol")
     except Exception as e:
         progresso.empty()
         st.error(f'Erro ao se conectar ao banco de dados. Error: {e}')

@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from datetime import datetime
 from dotenv import load_dotenv, find_dotenv
 from os import environ
@@ -46,7 +47,6 @@ def calcular_pecas(linha):
     else:
         return 0
 
-
 def retornar_data_ajustada(data: pd.Timestamp):
     data_atual = pd.Timestamp.now()
     if data.month == data_atual.month:
@@ -78,14 +78,23 @@ def filtrar_novos_dados_frigosol(data_frame: pd.DataFrame) -> pd.DataFrame:
     
     return df_filtrado
 
-def filtrar_novos_dados(data_frame: pd.DataFrame, tabela: str, campo: str = "NFS_NRO_NF"):
+def filtrar_novos_dados(data_frame: pd.DataFrame, tabela: str, unico_col: str = "NFS_NRO_NF", data_col: str ="NFS_DATA_EMISSAO"):
     conn = sqlalchemy.create_engine(URL_DB)
-    query = f'SELECT {campo} FROM {tabela};'
+    query = f'SELECT {unico_col}, {data_col} FROM {tabela};'
     pedidos_registrados = pd.read_sql_query(query, conn)
 
-    df_filtrado = data_frame[~data_frame[campo].isin(pedidos_registrados[campo])]
-    
-    return df_filtrado
+    id_para_datas = pedidos_registrados.groupby(unico_col)[data_col].apply(set).to_dict()
+
+    @np.vectorize
+    def verifica_linha(id_, data):
+        return id_ not in id_para_datas or data not in id_para_datas.get(id_, set())
+
+    mask = verifica_linha(
+        data_frame[unico_col].values,
+        data_frame[data_col].values
+    )
+
+    return data_frame[mask]
 
 def adicionar_registros_confrigo(novos_dados: pd.DataFrame) -> None:
     url_db = environ.get('URL_DB')
