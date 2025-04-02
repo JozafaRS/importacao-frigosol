@@ -47,17 +47,18 @@ def calcular_pecas(linha):
     else:
         return 0
 
-def retornar_data_ajustada(data: pd.Timestamp):
-    data_atual = pd.Timestamp.now()
-    if data.month == data_atual.month:
+def retornar_data_ajustada(data: pd.Timestamp, data_alternativa: pd.Timestamp):
+    if data.month == data_alternativa.month:
         return data
     else:
-        return data_atual
+        return data_alternativa
 
 def formatar_df_frigosol(df_original: pd.DataFrame) -> pd.DataFrame:
     data_frame = df_original.copy()
+
+    data_recente = data_frame['NFS_DATA_EMISSAO'].max()
     data_frame['VEND_NOME'] = data_frame['VEND_NOME'].apply(lambda x: str(x).replace("_x000D_", "").strip())
-    data_frame['DATA_AJUSTADA'] = data_frame['NFS_DATA_EMISSAO'].apply(retornar_data_ajustada)
+    data_frame['DATA_AJUSTADA'] = data_frame['NFS_DATA_EMISSAO'].apply(retornar_data_ajustada, args=[data_recente])
     return data_frame
 
 def filtrar_novos_dados_confrigo(data_frame: pd.DataFrame) -> pd.DataFrame:
@@ -85,16 +86,14 @@ def filtrar_novos_dados(data_frame: pd.DataFrame, tabela: str, unico_col: str = 
 
     id_para_datas = pedidos_registrados.groupby(unico_col)[data_col].apply(set).to_dict()
 
-    @np.vectorize
-    def verifica_linha(id_, data):
+    def verifica_linha(linha):
+        id_ = linha[unico_col]
+        data = linha[data_col]
         return id_ not in id_para_datas or data not in id_para_datas.get(id_, set())
 
-    mask = verifica_linha(
-        data_frame[unico_col].values,
-        data_frame[data_col].values
-    )
+    novo_dado = data_frame.apply(verifica_linha, axis=1)
 
-    return data_frame[mask]
+    return data_frame[novo_dado]
 
 def adicionar_registros_confrigo(novos_dados: pd.DataFrame) -> None:
     url_db = environ.get('URL_DB')
